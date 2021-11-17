@@ -1,5 +1,4 @@
-import axios, { AxiosResponse } from 'axios';
-import { reAuthorize } from './oauth.api';
+import axios from "axios";
 
 type HTTPMethods = 'post' | 'get' | 'put' | 'patch' | 'delete';
 
@@ -7,10 +6,9 @@ export interface IResponse<T> {
   error?: any;
   ok: boolean;
   data?: T;
-  response?: AxiosResponse<T>;
 }
 
-const apiUrl = process.env.REACT_APP_API_URL;
+const apiUrl = 'http://openlibrary.org';
 
 export async function request<T = any>(
   ...args: [
@@ -31,17 +29,8 @@ export async function request<T = any>(
     data.data = params;
   }
 
-  const headers: any = {};
-
-  headers.Authorization = `Basic ${process.env.REACT_APP_BASIC_AUTHORIZATION_TOKEN}`;
-  const token = localStorage.getItem('access_token');
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  const r = await axios(`${apiUrl}/${endpoint}`, {
+  return axios(`${apiUrl}/${endpoint}`, {
     method,
-    headers,
     ...data,
     ...options,
   })
@@ -58,14 +47,4 @@ export async function request<T = any>(
         error,
       };
     });
-
-  if (r.error?.response?.data?.error === 'invalid_token') {
-    const ok = await reAuthorize();
-
-    if (ok) {
-      return request(...args);
-    }
-  }
-
-  return r;
 }
